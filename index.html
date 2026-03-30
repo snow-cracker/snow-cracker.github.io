@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>我的航空摄影图库</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+  <h1>我的航空摄影图库</h1>
+
+  <!-- 搜索框 + 上传按钮 -->
+  <div class="search-box">
+    <input type="text" id="search" placeholder="搜索：空格分隔多关键词..." oninput="search()">
+    <button onclick="openUpload()">上传图片</button>
+  </div>
+
+  <!-- 导航 -->
+  <div class="nav">
+    <button onclick="navTime()">拍摄时间</button>
+    <button onclick="navLocation()">拍摄地点</button>
+    <button onclick="navAirline()">航空公司</button>
+    <button onclick="navModel()">飞机机型</button>
+  </div>
+
+  <div id="subNav" class="sub-nav"></div>
+  <div id="wall" class="wall"></div>
+</div>
+
+<!-- 上传弹窗（你要的投稿页面） -->
+<div id="uploadModal" class="modal">
+  <div class="modal-content">
+    <h2>上传飞机照片</h2>
+    <input type="file" id="imgFiles" multiple accept="image/*"><br>
+
+    <input placeholder="拍摄时间 (例：2025-10-01)" id="time"><br>
+    <input placeholder="拍摄地点" id="location"><br>
+    <input placeholder="ICAO 代码 (如 ZGGG、ZBAA)" id="icao"><br>
+    <input placeholder="航空公司" id="airline"><br>
+    <input placeholder="所属国家" id="country"><br>
+    <input placeholder="飞机机型(宽体机/窄体机)" id="model"><br>
+    <input placeholder="具体机型(A320neo/B787-9)" id="fullModel"><br>
+    <input placeholder="机龄" id="age"><br>
+    <input placeholder="飞机注册号" id="reg"><br>
+    <input placeholder="起降情况" id="status"><br>
+    <textarea placeholder="备注" id="note"></textarea><br>
+
+    <button onclick="submitPlane()">确认提交</button>
+    <button onclick="closeUpload()">取消</button>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

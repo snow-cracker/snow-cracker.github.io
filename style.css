@@ -1,18 +1,170 @@
-* {margin:0;padding:0;box-sizing:border-box}
-body {background:#111;color:white;font-family:Arial;padding:20px}
-.container {max-width:1400px;margin:0 auto}
-h1 {text-align:center;margin:20px 0}
-.search-box {display:flex;gap:10px;margin-bottom:15px}
-#search {flex:1;padding:12px;border-radius:8px;border:none}
-button {padding:12px 16px;background:#0071e3;color:white;border:none;border-radius:8px;cursor:pointer}
-.nav {display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-.sub-nav {display:flex;gap:8px;margin-bottom:20px;padding:10px;background:#222;border-radius:8px}
-.wall {display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:15px}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    background: #121212;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+}
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+h1 {
+    text-align: center;
+    margin: 20px 0 30px;
+    font-size: 26px;
+}
+.search-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+#search {
+    flex: 1;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    font-size: 16px;
+}
+button {
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: none;
+    background: #0071e3;
+    color: #fff;
+    font-size: 15px;
+    cursor: pointer;
+}
+.nav {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.sub-nav {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    background: #1e1e1e;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.masonry {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+}
+.card {
+    background: #1e1e1e;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+}
+.card img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+.card .info {
+    padding: 12px;
+    font-size: 13px;
+    line-height: 1.5;
+}
 
-.card {background:#222;border-radius:12px;overflow:hidden;cursor:pointer}
-.card img {width:100%;display:block}
-.card .info {padding:10px;font-size:12px;line-height:1.5}
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 999;
+}
+.modal-box {
+    background: #1e1e1e;
+    width: 90%;
+    max-width: 520px;
+    margin: 5% auto;
+    padding: 24px;
+    border-radius: 16px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.modal-box input, .modal-box textarea {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border: none;
+    font-size: 15px;
+}
+.modal-box textarea {
+    min-height: 80px;
+}
+.btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+#previewArea img {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin: 6px;
+}
+#previewArea button {
+    background: red;
+    color: #fff;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    font-size: 12px;
+    margin-left: -20px;
+}
 
-.modal {display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8)}
-.modal-content {background:#222;margin:5% auto;padding:20px;width:90%;max-width:500px;border-radius:12px}
-.modal-content input, .modal-content textarea {width:100%;margin:6px 0;padding:10px;border-radius:6px;border:none}
+.detail-box {
+    background: #1a1a1a;
+    width: 90%;
+    max-width: 900px;
+    margin: 3% auto;
+    padding: 30px;
+    border-radius: 16px;
+}
+.detail-head {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+.img-slider {
+    position: relative;
+    text-align: center;
+    margin-bottom: 20px;
+}
+.img-slider img {
+    max-width: 100%;
+    max-height: 65vh;
+    border-radius: 12px;
+}
+.arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.5);
+    font-size: 28px;
+    padding: 10px 16px;
+    border-radius: 50%;
+}
+.arrow:nth-child(1) { left: 10px; }
+.arrow:nth-child(3) { right: 10px; }
+.detail-info {
+    line-height: 2;
+    font-size: 16px;
+}

@@ -1,15 +1,15 @@
 const $ = id => document.getElementById(id);
 let current = planes;
 
-// 本地存储（永不丢失）
+// 本地存储（刷新不丢失）
 if (localStorage.planeData) planes = JSON.parse(localStorage.planeData);
 render();
 
-// 打开上传弹窗
+// 打开/关闭上传弹窗
 function openUpload() { $("uploadModal").style.display = "block"; }
 function closeUpload() { $("uploadModal").style.display = "none"; }
 
-// 提交上传（你要的投稿功能）
+// 提交上传（含ICAO字段）
 function submitPlane() {
   const files = $("imgFiles").files;
   const images = [];
@@ -39,7 +39,8 @@ function submitPlane() {
 
 // 渲染照片墙（相同飞机自动合并）
 function render() {
-  const wall = $("wall"); wall.innerHTML = "";
+  const wall = $("wall");
+  wall.innerHTML = "";
   const groups = {};
 
   for (let p of current) {
@@ -65,7 +66,7 @@ function render() {
   }
 }
 
-// 搜索（空格多关键词）
+// 搜索（空格分隔多关键词）
 function search() {
   const kw = $("search").value.toLowerCase().split(" ").filter(i => i);
   current = planes.filter(p => {
@@ -80,67 +81,81 @@ function showDetail(list) {
   const p = list[0];
   const imgs = list.flatMap(i => i.images);
   let txt = "\n";
-  for (let k of Object.keys(p)) txt += `${k}: ${p[k]}\n`;
-  alert(txt + "图片数量：" + imgs.length);
+  for (let k of Object.keys(p)) {
+    if (k !== "images") txt += `${k}：${p[k]}\n`;
+  }
+  txt += `\n图片数量：${imgs.length}`;
+  alert(txt);
 }
 
-// 导航功能（你要的多级联动）
+// 子导航按钮生成
+function subNav(list, callback) {
+  const box = $("subNav");
+  box.innerHTML = "";
+  list.forEach(item => {
+    const btn = document.createElement("button");
+    btn.innerText = item;
+    btn.onclick = () => callback(item);
+    box.appendChild(btn);
+  });
+}
+
+// 导航：拍摄时间 → 拍摄地点
 function navTime() {
-  const list = [...new Set(planes.map(i => i.time))].sort();
-  sub(list, t => {
-    current = planes.filter(i => i.time === t);
-    const locs = [...new Set(current.map(i => i.location))].sort();
-    sub(locs, l => {
-      current = planes.filter(i => i.time === t && i.location === l);
+  const times = [...new Set(planes.map(p => p.time))].sort();
+  subNav(times, time => {
+    current = planes.filter(p => p.time === time);
+    const locations = [...new Set(current.map(p => p.location))].sort();
+    subNav(locations, location => {
+      current = planes.filter(p => p.time === time && p.location === location);
       render();
     });
   });
 }
 
+// 导航：拍摄地点 → 拍摄时间
 function navLocation() {
-  const list = [...new Set(planes.map(i => i.location))].sort();
-  sub(list, l => {
-    current = planes.filter(i => i.location === l);
-    const times = [...new Set(current.map(i => i.time))].sort();
-    sub(times, t => {
-      current = planes.filter(i => i.location === l && i.time === t);
+  const locations = [...new Set(planes.map(p => p.location))].sort();
+  subNav(locations, location => {
+    current = planes.filter(p => p.location === location);
+    const times = [...new Set(current.map(p => p.time))].sort();
+    subNav(times, time => {
+      current = planes.filter(p => p.location === location && p.time === time);
       render();
     });
   });
 }
 
+// 导航：航空公司（国籍判断：仅“中国”为中国航司，其余为外国）
 function navAirline() {
-  sub(["中国航司", "外国航司"], t => {
-    const cs = t === "中国航司" ? "中国" : "外国";
-    const as = [...new Set(planes.filter(i => i.country === cs).map(i => i.airline))].sort();
-    sub(as, a => {
-      current = planes.filter(i => i.airline === a);
-      const ms = [...new Set(current.map(i => i.model))].sort();
-      sub(ms, m => {
-        current = planes.filter(i => i.airline === a && i.model === m);
+  subNav(["中国航司", "外国航司"], type => {
+    let filteredPlanes;
+    if (type === "中国航司") {
+      filteredPlanes = planes.filter(p => p.country === "中国");
+    } else {
+      filteredPlanes = planes.filter(p => p.country !== "中国");
+    }
+    const airlines = [...new Set(filteredPlanes.map(p => p.airline))].sort();
+    subNav(airlines, airline => {
+      current = planes.filter(p => p.airline === airline);
+      const models = [...new Set(current.map(p => p.model))].sort();
+      subNav(models, model => {
+        current = planes.filter(p => p.airline === airline && p.model === model);
         render();
       });
     });
   });
 }
 
+// 导航：飞机机型 → 航空公司
 function navModel() {
-  const list = [...new Set(planes.map(i => i.model))].sort();
-  sub(list, m => {
-    current = planes.filter(i => i.model === m);
-    const as = [...new Set(current.map(i => i.airline))].sort();
-    sub(as, a => {
-      current = planes.filter(i => i.model === m && i.airline === a);
+  const models = [...new Set(planes.map(p => p.model))].sort();
+  subNav(models, model => {
+    current = planes.filter(p => p.model === model);
+    const airlines = [...new Set(current.map(p => p.airline))].sort();
+    subNav(airlines, airline => {
+      current = planes.filter(p => p.model === model && p.airline === airline);
       render();
     });
-  });
-}
-
-function sub(list, cb) {
-  const box = $("subNav"); box.innerHTML = "";
-  list.forEach(i => {
-    const b = document.createElement("button");
-    b.innerText = i; b.onclick = () => cb(i);
-    box.appendChild(b);
   });
 }

@@ -3,7 +3,7 @@ let currentList = planes;
 let editIndex = -1;
 let sliderImages = [];
 let sliderIndex = 0;
-let tempImages = [];
+let tempImageList = [];
 
 if (localStorage.planeGallery) {
     planes = JSON.parse(localStorage.planeGallery);
@@ -16,7 +16,7 @@ function render() {
     gallery.innerHTML = "";
     const groups = {};
     currentList.forEach(p => {
-        const key = p.airline + p.model + p.fullModel + p.reg;
+        const key = p.reg || p.airline + p.fullModel + p.time;
         if (!groups[key]) groups[key] = [];
         groups[key].push(p);
     });
@@ -27,10 +27,9 @@ function render() {
         card.innerHTML = `
             <img src="${item.images[0]}">
             <div class="info">
-                <div>航司：${item.airline}</div>
-                <div>机型：${item.model}</div>
-                <div>${item.fullModel}</div>
-                <div>注册号：${item.reg}</div>
+                <div>${item.airline || '-'}</div>
+                <div>${item.fullModel || '-'}</div>
+                <div>${item.reg || '-'}</div>
             </div>
         `;
         card.onclick = () => openDetail(group);
@@ -38,92 +37,63 @@ function render() {
     });
 }
 
-function previewImages() {
-    const files = $("imgFiles").files;
-    tempImages = [];
-    const area = $("previewArea");
-    area.innerHTML = "";
-    for (let i = 0; i < files.length; i++) {
-        const url = URL.createObjectURL(files[i]);
-        tempImages.push(url);
-        const img = document.createElement("img");
-        img.src = url;
-        const del = document.createElement("button");
-        del.innerText = "×";
-        del.onclick = () => {
-            tempImages.splice(i, 1);
-            previewImages();
-        };
-        const box = document.createElement("span");
-        box.appendChild(img);
-        box.appendChild(del);
-        area.appendChild(box);
-    }
-}
-
 function openUpload() {
     editIndex = -1;
     clearForm();
-    $("uploadModal").style.display = "block";
+    $("uploadModal").style.display = "flex";
 }
-
-function closeUpload() {
-    $("uploadModal").style.display = "none";
-}
+function closeUpload() { $("uploadModal").style.display = "none"; }
 
 function clearForm() {
-    $("time").value = "";
-    $("location").value = "";
-    $("icao").value = "";
-    $("airline").value = "";
-    $("airlineCode").value = "";
-    $("country").value = "";
-    $("model").value = "";
-    $("fullModel").value = "";
-    $("age").value = "";
-    $("reg").value = "";
-    $("status").value = "";
-    $("note").value = "";
-    $("imgFiles").value = "";
-    tempImages = [];
-    $("previewArea").innerHTML = "";
+    $("time").value = $("location").value = $("icao").value = "";
+    $("airline").value = $("airlineCode").value = $("country").value = "";
+    $("model").value = $("fullModel").value = $("age").value = "";
+    $("reg").value = $("status").value = $("note").value = "";
+    tempImageList = [];
+    refreshPreview();
+}
+
+function addImages() {
+    const files = $("imgFiles").files;
+    for (let i = 0; i < files.length; i++) {
+        const url = URL.createObjectURL(files[i]);
+        tempImageList.push(url);
+    }
+    refreshPreview();
+}
+
+function refreshPreview() {
+    const wrap = $("previewWrapper");
+    wrap.innerHTML = "";
+    tempImageList.forEach((src, idx) => {
+        const item = document.createElement("div");
+        item.className = "preview-item";
+        item.innerHTML = `<img src="${src}"><button class="del-img" onclick="removeImage(${idx})">×</button>`;
+        wrap.appendChild(item);
+    });
+}
+
+function removeImage(index) {
+    tempImageList.splice(index, 1);
+    refreshPreview();
 }
 
 function submitPhoto() {
+    if (tempImageList.length === 0) return alert("请选择图片");
     const data = {
-        time: $("time").value || "",
-        location: $("location").value || "",
-        icao: $("icao").value || "",
-        airline: $("airline").value || "",
-        airlineCode: $("airlineCode").value || "",
-        country: $("country").value || "",
-        model: $("model").value || "",
-        fullModel: $("fullModel").value || "",
-        age: $("age").value || "",
-        reg: $("reg").value || "",
-        status: $("status").value || "",
-        note: $("note").value || "",
-        images: [...tempImages]
+        time: $("time").value, location: $("location").value, icao: $("icao").value,
+        airline: $("airline").value, airlineCode: $("airlineCode").value, country: $("country").value,
+        model: $("model").value, fullModel: $("fullModel").value, age: $("age").value,
+        reg: $("reg").value, status: $("status").value, note: $("note").value,
+        images: [...tempImageList]
     };
-    if (editIndex >= 0) {
-        planes[editIndex] = data;
-    } else {
-        planes.unshift(data);
-    }
+    if (editIndex >= 0) planes[editIndex] = data;
+    else planes.unshift(data);
     localStorage.planeGallery = JSON.stringify(planes);
     currentList = planes;
     closeUpload();
     render();
-    alert("提交成功！");
-}
-
-function doSearch() {
-    const keywords = $("search").value.toLowerCase().split(" ").filter(k => k);
-    currentList = planes.filter(item => {
-        const text = JSON.stringify(item).toLowerCase();
-        return keywords.every(k => text.includes(k));
-    });
-    render();
+    alert("提交成功");
 }
 
 function openDetail(group) {
@@ -131,53 +101,53 @@ function openDetail(group) {
     group.forEach(g => sliderImages.push(...g.images));
     sliderIndex = 0;
     const target = group[0];
-    editIndex = planes.findIndex(p =>
-        p.time === target.time &&
-        p.location === target.location &&
-        p.reg === target.reg
-    );
+    editIndex = planes.findIndex(p => p.reg === target.reg);
+    if (editIndex < 0) editIndex = 0;
     updateDetail();
-    $("detailModal").style.display = "block";
+    $("detailModal").style.display = "flex";
 }
 
 function updateDetail() {
-    $("showImg").src = sliderImages[sliderIndex];
-    const p = planes[editIndex];
+    $("detailImg").src = sliderImages[sliderIndex];
+    const p = planes[editIndex] || {};
     $("detailInfo").innerHTML = `
-        <div>拍摄时间：${p.time}</div>
-        <div>拍摄地点：${p.location}</div>
-        <div>ICAO代码：${p.icao}</div>
-        <div>航空公司：${p.airline}</div>
-        <div>航司代码：${p.airlineCode}</div>
-        <div>所属国家：${p.country}</div>
-        <div>飞机机型：${p.model}</div>
-        <div>具体机型：${p.fullModel}</div>
-        <div>机龄：${p.age}</div>
-        <div>飞机注册号：${p.reg}</div>
-        <div>起降情况：${p.status}</div>
-        <div>备注：${p.note}</div>
+        <div>拍摄时间：${p.time || '-'}</div>
+        <div>拍摄地点：${p.location || '-'}</div>
+        <div>ICAO：${p.icao || '-'}</div>
+        <div>航空公司：${p.airline || '-'}</div>
+        <div>航司代码：${p.airlineCode || '-'}</div>
+        <div>国家：${p.country || '-'}</div>
+        <div>机型：${p.model || '-'}</div>
+        <div>具体型号：${p.fullModel || '-'}</div>
+        <div>机龄：${p.age || '-'}</div>
+        <div>注册号：${p.reg || '-'}</div>
+        <div>起降：${p.status || '-'}</div>
+        <div>备注：${p.note || '-'}</div>
     `;
 }
 
 function prevImg() {
-    sliderIndex--;
-    if (sliderIndex < 0) sliderIndex = sliderImages.length - 1;
+    sliderIndex = (sliderIndex - 1 + sliderImages.length) % sliderImages.length;
     updateDetail();
 }
-
 function nextImg() {
-    sliderIndex++;
-    if (sliderIndex >= sliderImages.length) sliderIndex = 0;
+    sliderIndex = (sliderIndex + 1) % sliderImages.length;
     updateDetail();
 }
 
-function closeDetail() {
-    $("detailModal").style.display = "none";
+function openFullScreen() {
+    $("fullImg").src = sliderImages[sliderIndex];
+    $("fullModal").style.display = "flex";
 }
+function closeFullScreen() {
+    $("fullModal").style.display = "none";
+}
+
+function closeDetail() { $("detailModal").style.display = "none"; }
 
 function openEdit() {
     closeDetail();
-    const p = planes[editIndex];
+    const p = planes[editIndex] || {};
     $("time").value = p.time || "";
     $("location").value = p.location || "";
     $("icao").value = p.icao || "";
@@ -190,61 +160,65 @@ function openEdit() {
     $("reg").value = p.reg || "";
     $("status").value = p.status || "";
     $("note").value = p.note || "";
-    tempImages = [...p.images];
-    $("uploadModal").style.display = "block";
+    tempImageList = [...(p.images || [])];
+    refreshPreview();
+    $("uploadModal").style.display = "flex";
 }
 
-function subNav(list, callback) {
+function doSearch() {
+    const keywords = $("search").value.toLowerCase().split(" ").filter(Boolean);
+    currentList = planes.filter(item => keywords.every(k =>
+        JSON.stringify(item).toLowerCase().includes(k)
+    ));
+    render();
+}
+
+function setSubNav(items, onClick) {
     const box = $("subNav");
     box.innerHTML = "";
-    list.forEach(item => {
+    items.forEach(item => {
         const btn = document.createElement("button");
         btn.innerText = item;
-        btn.onclick = () => callback(item);
+        btn.onclick = () => onClick(item);
         box.appendChild(btn);
     });
 }
 
 function navByTime() {
-    const times = [...new Set(planes.map(p => p.time))].filter(Boolean).sort();
-    subNav(times, t => {
-        const locs = [...new Set(planes.filter(p => p.time === t).map(p => p.location))].filter(Boolean).sort();
-        subNav(locs, l => {
+    const times = [...new Set(planes.map(p => p.time).filter(Boolean))].sort();
+    setSubNav(times, t => {
+        const locs = [...new Set(planes.filter(p => p.time === t).map(p => p.location).filter(Boolean))].sort();
+        setSubNav(locs, l => {
             currentList = planes.filter(p => p.time === t && p.location === l);
             render();
         });
     });
 }
-
 function navByLocation() {
-    const locs = [...new Set(planes.map(p => p.location))].filter(Boolean).sort();
-    subNav(locs, l => {
-        const times = [...new Set(planes.filter(p => p.location === l).map(p => p.time))].filter(Boolean).sort();
-        subNav(times, t => {
+    const locs = [...new Set(planes.map(p => p.location).filter(Boolean))].sort();
+    setSubNav(locs, l => {
+        const times = [...new Set(planes.filter(p => p.location === l).map(p => p.time).filter(Boolean))].sort();
+        setSubNav(times, t => {
             currentList = planes.filter(p => p.location === l && p.time === t);
             render();
         });
     });
 }
-
 function navByAirline() {
-    subNav(["中国航司", "外国航司"], type => {
-        const filtered = type === "中国航司"
-            ? planes.filter(p => p.country === "中国")
-            : planes.filter(p => p.country !== "中国");
-        const airlines = [...new Set(filtered.map(p => p.airline))].filter(Boolean).sort();
-        subNav(airlines, a => {
+    setSubNav(["中国航司", "外国航司"], type => {
+        const filtered = type === "中国航司" ? planes.filter(p => p.country === "中国") : planes.filter(p => p.country !== "中国");
+        const airlines = [...new Set(filtered.map(p => p.airline).filter(Boolean))].sort();
+        setSubNav(airlines, a => {
             currentList = planes.filter(p => p.airline === a);
             render();
         });
     });
 }
-
 function navByModel() {
-    const models = [...new Set(planes.map(p => p.model))].filter(Boolean).sort();
-    subNav(models, m => {
-        const airlines = [...new Set(planes.filter(p => p.model === m).map(p => p.airline))].filter(Boolean).sort();
-        subNav(airlines, a => {
+    const models = [...new Set(planes.map(p => p.model).filter(Boolean))].sort();
+    setSubNav(models, m => {
+        const airlines = [...new Set(planes.filter(p => p.model === m).map(p => p.airline).filter(Boolean))].sort();
+        setSubNav(airlines, a => {
             currentList = planes.filter(p => p.model === m && p.airline === a);
             render();
         });

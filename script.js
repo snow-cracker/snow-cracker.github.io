@@ -5,6 +5,7 @@ let sliderImages = [];
 let sliderIndex = 0;
 let tempImageList = [];
 
+// 安全读取本地数据
 if (localStorage.planeGallery) {
     try {
         planes = JSON.parse(localStorage.planeGallery);
@@ -15,6 +16,7 @@ if (localStorage.planeGallery) {
 }
 render();
 
+// 渲染列表
 function render() {
     const gallery = $("gallery");
     gallery.innerHTML = "";
@@ -22,9 +24,8 @@ function render() {
 
     currentList.forEach((item, idx) => {
         if (!item) return;
-        let imgs = item.images || [];
-        if (typeof imgs === 'string') imgs = [imgs];
-        const first = imgs.length > 0 ? imgs[0] : '';
+        const imgs = item.images || [];
+        const first = imgs.length > 0 ? imgs[0] : "";
 
         const card = document.createElement("div");
         card.className = "card";
@@ -41,6 +42,7 @@ function render() {
     });
 }
 
+// 打开上传
 function openUpload() {
     editIndex = -1;
     clearForm();
@@ -48,6 +50,7 @@ function openUpload() {
 }
 function closeUpload() { $("uploadModal").style.display = "none"; }
 
+// 清空表单
 function clearForm() {
     $("time").value = $("location").value = $("icao").value = "";
     $("airline").value = $("airlineCode").value = $("country").value = "";
@@ -57,31 +60,41 @@ function clearForm() {
     refreshPreview();
 }
 
+// 🔥 核心修复：永久保存图片（base64）
 function addImages() {
     const files = $("imgFiles").files;
     for (let i = 0; i < files.length; i++) {
-        const url = URL.createObjectURL(files[i]);
-        tempImageList.push(url);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            tempImageList.push(e.target.result);
+            refreshPreview();
+        };
+        reader.readAsDataURL(files[i]);
     }
-    refreshPreview();
 }
 
+// 预览图
 function refreshPreview() {
     const wrap = $("previewWrapper");
     wrap.innerHTML = "";
     tempImageList.forEach((src, idx) => {
         const item = document.createElement("div");
         item.className = "preview-item";
-        item.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;"><button class="del-img" onclick="removeImage(${idx})">×</button>`;
+        item.innerHTML = `
+            <img src="${src}" style="width:100%;height:100%;object-fit:cover;">
+            <button class="del-img" onclick="removeImage(${idx})">×</button>
+        `;
         wrap.appendChild(item);
     });
 }
 
+// 删除预览图
 function removeImage(index) {
     tempImageList.splice(index, 1);
     refreshPreview();
 }
 
+// 提交（永久保存）
 function submitPhoto() {
     if (tempImageList.length === 0) return alert("请选择图片");
     const data = {
@@ -91,22 +104,20 @@ function submitPhoto() {
         reg: $("reg").value, status: $("status").value, note: $("note").value,
         images: [...tempImageList]
     };
-    if (editIndex >= 0) {
-        planes[editIndex] = data;
-    } else {
-        planes.unshift(data);
-    }
+
+    if (editIndex >= 0) planes[editIndex] = data;
+    else planes.unshift(data);
+
     localStorage.planeGallery = JSON.stringify(planes);
     currentList = planes;
     closeUpload();
     render();
-    alert("提交成功");
+    alert("提交成功！图片永久保存！");
 }
 
+// 打开详情
 function openDetail(item, index) {
-    if (!item) return;
     sliderImages = item.images || [];
-    if (typeof sliderImages === 'string') sliderImages = [sliderImages];
     sliderIndex = 0;
     editIndex = index;
     updateDetail();
@@ -114,8 +125,7 @@ function openDetail(item, index) {
 }
 
 function updateDetail() {
-    const img = sliderImages[sliderIndex] || '';
-    $("detailImg").src = img;
+    $("detailImg").src = sliderImages[sliderIndex] || "";
     const p = planes[editIndex] || {};
     $("detailInfo").innerHTML = `
         <div>拍摄时间：${p.time || '-'}</div>
@@ -133,31 +143,26 @@ function updateDetail() {
     `;
 }
 
+// 左右切换图片
 function prevImg() {
-    if (!sliderImages || sliderImages.length === 0) return;
     sliderIndex = (sliderIndex - 1 + sliderImages.length) % sliderImages.length;
     updateDetail();
 }
-
 function nextImg() {
-    if (!sliderImages || sliderImages.length === 0) return;
     sliderIndex = (sliderIndex + 1) % sliderImages.length;
     updateDetail();
 }
 
+// 全屏预览
 function openFullScreen() {
-    if (sliderImages[sliderIndex]) {
-        $("fullImg").src = sliderImages[sliderIndex];
-        $("fullModal").style.display = "flex";
-    }
+    $("fullImg").src = sliderImages[sliderIndex];
+    $("fullModal").style.display = "flex";
 }
-
-function closeFullScreen() {
-    $("fullModal").style.display = "none";
-}
+function closeFullScreen() { $("fullModal").style.display = "none"; }
 
 function closeDetail() { $("detailModal").style.display = "none"; }
 
+// 编辑
 function openEdit() {
     closeDetail();
     const p = planes[editIndex] || {};
@@ -178,6 +183,7 @@ function openEdit() {
     $("uploadModal").style.display = "flex";
 }
 
+// 搜索
 function doSearch() {
     const keywords = $("search").value.toLowerCase().split(" ").filter(Boolean);
     currentList = planes.filter(item => keywords.every(k =>
@@ -186,6 +192,7 @@ function doSearch() {
     render();
 }
 
+// 子导航
 function setSubNav(items, onClick) {
     const box = $("subNav");
     box.innerHTML = "";
@@ -193,7 +200,7 @@ function setSubNav(items, onClick) {
         const btn = document.createElement("button");
         btn.innerText = item;
         btn.onclick = () => onClick(item);
-        box.appendChild(item);
+        box.appendChild(btn);
     });
 }
 

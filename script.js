@@ -22,7 +22,6 @@ function render() {
     gallery.innerHTML = "";
     if (!currentList) return;
 
-    // 按 reg 分组
     const groups = {};
     currentList.forEach((item, idx) => {
         if (!item) return;
@@ -43,10 +42,6 @@ function render() {
                 <div>航司：${first.airline || '-'}</div>
                 <div>机型：${first.model || '-'}</div>
                 <div>注册号：${first.reg || '-'}</div>
-                <button onclick="deleteGroup('${first.reg}', event)" 
-                    style="margin-top:8px;background:#ff4444;color:white;border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;">
-                    删除本组
-                </button>
             </div>
         `;
         card.onclick = (e) => {
@@ -57,12 +52,12 @@ function render() {
 }
 
 // 删除整组（同注册号）
-function deleteGroup(reg, e) {
-    e.stopPropagation();
-    if (!confirm('确定删除该注册号所有记录？')) return;
+function deleteGroup(reg) {
+    if (!confirm('确定删除该注册号所有记录？删除后无法恢复')) return;
     planes = planes.filter(p => (p.reg || '').trim() !== reg.trim());
     localStorage.planeGallery = JSON.stringify(planes);
     currentList = planes;
+    closeDetail();
     render();
 }
 
@@ -70,9 +65,11 @@ function deleteGroup(reg, e) {
 function openGroupDetail(group) {
     sliderItems = [];
     sliderImages = [];
+    let currentReg = '';
     group.forEach(({ item, index }) => {
+        if (!currentReg) currentReg = item.reg;
         (item.images || []).forEach(img => {
-            sliderItems.push({ item, index });
+            sliderItems.push({ item, index, reg: currentReg });
             sliderImages.push(img);
         });
     });
@@ -84,7 +81,7 @@ function openGroupDetail(group) {
 // 更新详情：图片 + 信息一起切换
 function updateDetail() {
     const img = sliderImages[sliderIndex] || '';
-    const { item } = sliderItems[sliderIndex] || { item: {} };
+    const { item, reg } = sliderItems[sliderIndex] || { item: {}, reg: '' };
     $("detailImg").src = img;
 
     $("detailInfo").innerHTML = `
@@ -98,6 +95,16 @@ function updateDetail() {
         <div>注册号：${item.reg || '-'}</div>
         <div>起降：${item.status || '-'}</div>
         <div>备注：${item.note || '-'}</div>
+        <div style="margin-top:14px;display:flex;gap:8px;">
+            <button onclick="openEdit()" 
+                style="padding:6px 12px;border:1px solid #ccc;border-radius:6px;cursor:pointer;font-size:14px;">
+                修改信息
+            </button>
+            <button onclick="deleteGroup('${reg}')" 
+                style="padding:6px 12px;border:1px solid #ccc;border-radius:6px;cursor:pointer;font-size:14px;">
+                删除本组
+            </button>
+        </div>
     `;
 }
 
@@ -187,7 +194,6 @@ function submitPhoto() {
         note: $("note").value
     };
 
-    // 一次上传多张 = 多条同注册号记录，自动合并展示
     tempImageList.forEach(img => {
         const data = { ...base, images: [img] };
         planes.unshift(data);

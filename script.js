@@ -1,47 +1,88 @@
-let currentGroupReg = '';
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>SnowCracker's Aviation Photography Collection</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-function openGroupDetail(group) {
-  sliderItems = [];
-  sliderImages = [];
-  currentGroupReg = '';
+<div class="container">
+    <h1>SnowCracker's Aviation Photography Collection</h1>
 
-  group.forEach(({ item, index }) => {
-    if (!currentGroupReg) currentGroupReg = item.reg || '';
-    (item.images || []).forEach(img => {
-      sliderItems.push({ item, index });
-      sliderImages.push(img);
-    });
-  });
+    <div class="search-bar">
+        <input type="text" id="search" placeholder="搜索：空格分隔多关键词，支持碎片化搜索（广州/CAN/2023/B-）" oninput="doSearch()">
+        <button onclick="openUpload()">上传图片</button>
+    </div>
 
-  sliderIndex = 0;
-  updateDetail();
-  $("detailModal").style.display = "flex";
-}
+    <div class="main-nav">
+        <button onclick="navByTime()">拍摄时间</button>
+        <button onclick="navByLocation()">拍摄地点</button>
+        <button onclick="navByAirline()">航空公司</button>
+        <button onclick="navByModel()">飞机机型</button>
+    </div>
 
-function updateDetail() {
-  const img = sliderImages[sliderIndex] || '';
-  const { item } = sliderItems[sliderIndex] || { item: {} };
-  $("detailImg").src = img;
+    <div id="subNav" class="sub-nav"></div>
 
-  $("detailInfo").innerHTML = `
-    <div>拍摄时间：${item.time || '-'}</div>
-    <div>拍摄地点：${item.location || '-'}</div>
-    <div>ICAO：${item.icao || '-'}</div>
-    <div>航空公司：${item.airline || '-'}</div>
-    <div>航司代码：${item.airlineCode || '-'}</div>
-    <div>国家：${item.country || '-'}</div>
-    <div>机型：${item.model || '-'}</div>
-    <div>注册号：${item.reg || '-'}</div>
-    <div>起降：${item.status || '-'}</div>
-    <div>备注：${item.note || '-'}</div>
-  `;
-}
+    <div id="gallery" class="masonry"></div>
+</div>
 
-function deleteGroup(reg) {
-  if (!confirm('确定删除该注册号所有记录？删除后无法恢复')) return;
-  planes = planes.filter(p => (p.reg || '').trim() !== reg.trim());
-  localStorage.planeGallery = JSON.stringify(planes);
-  currentList = planes;
-  closeDetail();
-  render();
-}
+<!-- 上传弹窗 -->
+<div id="uploadModal" class="modal">
+    <div class="upload-card">
+        <div class="upload-header">
+            <h2>上传航空摄影</h2>
+            <button class="close-btn" onclick="closeUpload()">×</button>
+        </div>
+
+        <div class="preview-area">
+            <div id="previewWrapper" class="preview-list"></div>
+            <label class="add-btn">+<input type="file" id="imgFiles" multiple accept="image/*" hidden onchange="addImages()"></label>
+        </div>
+
+        <div class="form-body">
+            <div class="form-row"><label>拍摄时间</label><input id="time"></div>
+            <div class="form-row"><label>拍摄地点</label><input id="location"></div>
+            <div class="form-row"><label>ICAO 代码</label><input id="icao"></div>
+            <div class="form-row"><label>航空公司</label><input id="airline"></div>
+            <div class="form-row"><label>航司代码</label><input id="airlineCode"></div>
+            <div class="form-row"><label>所属国家</label><input id="country"></div>
+            <div class="form-row"><label>飞机机型</label><input id="model"></div>
+            <div class="form-row"><label>飞机注册号</label><input id="reg"></div>
+            <div class="form-row"><label>起降情况</label><input id="status"></div>
+            <div class="form-row"><label>备注</label><textarea id="note" rows="3"></textarea></div>
+        </div>
+
+        <div class="upload-footer">
+            <button class="cancel" onclick="closeUpload()">取消</button>
+            <button class="submit" onclick="submitPhoto()">确认提交</button>
+        </div>
+    </div>
+</div>
+
+<!-- 详情弹窗 -->
+<div id="detailModal" class="modal">
+    <div class="detail-card">
+        <div class="detail-header">
+            <button onclick="deleteGroup(currentGroupReg)">删除本组</button>
+            <button onclick="openEdit()">修改信息</button>
+            <button onclick="closeDetail()">关闭</button>
+        </div>
+        <div class="detail-image-section">
+            <button class="slide left" onclick="prevImg()">&lt;</button>
+            <img id="detailImg" onclick="openFullScreen()">
+            <button class="slide right" onclick="nextImg()">&gt;</button>
+        </div>
+        <div class="detail-info-section" id="detailInfo"></div>
+    </div>
+</div>
+
+<!-- 全屏预览 -->
+<div id="fullModal" class="modal" onclick="closeFullScreen()">
+    <img id="fullImg">
+</div>
+
+<script src="data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

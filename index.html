@@ -48,8 +48,6 @@
             <div class="form-row"><label>航司代码</label><input id="airlineCode"></div>
             <div class="form-row"><label>所属国家</label><input id="country"></div>
             <div class="form-row"><label>飞机机型</label><input id="model"></div>
-            <div class="form-row"><label>具体机型</label><input id="fullModel"></div>
-            <div class="form-row"><label>机龄</label><input id="age"></div>
             <div class="form-row"><label>飞机注册号</label><input id="reg"></div>
             <div class="form-row"><label>起降情况</label><input id="status"></div>
             <div class="form-row"><label>备注</label><textarea id="note" rows="3"></textarea></div>
@@ -66,7 +64,6 @@
 <div id="detailModal" class="modal">
     <div class="detail-card">
         <div class="detail-header">
-            <!-- 🔥 修复：正确顺序！！！ -->
             <button onclick="deleteGroup(currentGroupReg)">删除本组</button>
             <button onclick="openEdit()">修改信息</button>
             <button onclick="closeDetail()">关闭</button>

@@ -1,84 +1,32 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<title>SnowCracker's Aviation Photography Collection</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
+let planes = [];
 
-<div class="container">
-    <h1>SnowCracker's Aviation Photography Collection</h1>
+const DB_NAME = 'planeGalleryDB';
+const DB_STORE = 'planes';
+let db;
 
-    <div class="search-bar">
-        <input type="text" id="search" placeholder="搜索：空格分隔多关键词，支持碎片化搜索" oninput="doSearch()">
-        <button onclick="openUpload()">上传图片</button>
-    </div>
+function initDB(callback){
+    const request = indexedDB.open(DB_NAME,1);
+    request.onupgradeneeded = e => {
+        db = e.target.result;
+        if(!db.objectStoreNames.contains(DB_STORE)){
+            db.createObjectStore(DB_STORE,{keyPath:'id',autoIncrement:true});
+        }
+    };
+    request.onsuccess = e => { db = e.target.result; loadPlanes(callback); };
+    request.onerror = e => { alert('数据库初始化失败'); };
+}
 
-    <div class="main-nav">
-        <button onclick="navByTime()">拍摄时间</button>
-        <button onclick="navByLocation()">拍摄地点</button>
-        <button onclick="navByAirline()">航空公司</button>
-        <button onclick="navByModel()">飞机机型</button>
-    </div>
+function savePlanes(){
+    if(!db) return;
+    const tx = db.transaction(DB_STORE,'readwrite');
+    const store = tx.objectStore(DB_STORE);
+    store.clear().onsuccess = () => { planes.forEach(p=>store.add(p)); };
+}
 
-    <div id="subNav" class="sub-nav"></div>
-    <div id="gallery" class="masonry"></div>
-</div>
-
-<!-- 上传弹窗 -->
-<div id="uploadModal" class="modal">
-    <div class="upload-card">
-        <div class="upload-header">
-            <h2>上传航空摄影</h2>
-            <button class="close-btn" onclick="closeUpload()">×</button>
-        </div>
-        <div class="preview-area">
-            <div id="previewWrapper" class="preview-list"></div>
-            <label class="add-btn">+<input type="file" id="imgFiles" multiple accept="image/*" hidden onchange="addImages()"></label>
-        </div>
-        <div class="form-body">
-            <div class="form-row"><label>拍摄时间</label><input id="time"></div>
-            <div class="form-row"><label>拍摄地点</label><input id="location"></div>
-            <div class="form-row"><label>ICAO 代码</label><input id="icao"></div>
-            <div class="form-row"><label>航空公司</label><input id="airline"></div>
-            <div class="form-row"><label>航司代码</label><input id="airlineCode"></div>
-            <div class="form-row"><label>所属国家</label><input id="country"></div>
-            <div class="form-row"><label>飞机机型</label><input id="model"></div>
-            <div class="form-row"><label>飞机注册号</label><input id="reg"></div>
-            <div class="form-row"><label>起降情况</label><input id="status"></div>
-            <div class="form-row"><label>备注</label><textarea id="note" rows="3"></textarea></div>
-        </div>
-        <div class="upload-footer">
-            <button class="cancel" onclick="closeUpload()">取消</button>
-            <button class="submit" onclick="submitPhoto()">确认提交</button>
-        </div>
-    </div>
-</div>
-
-<!-- 详情弹窗 -->
-<div id="detailModal" class="modal">
-    <div class="detail-card">
-        <div class="detail-header">
-            <button onclick="deleteGroup(currentGroupReg)">删除本组</button>
-            <button onclick="openEdit()">修改信息</button>
-            <button onclick="closeDetail()">关闭</button>
-        </div>
-        <div class="detail-image-section">
-            <button class="slide left" onclick="prevImg()">&lt;</button>
-            <img id="detailImg" onclick="openFullScreen()">
-            <button class="slide right" onclick="nextImg()">&gt;</button>
-        </div>
-        <div class="detail-info-section" id="detailInfo"></div>
-    </div>
-</div>
-
-<!-- 全屏预览 -->
-<div id="fullModal" class="modal" onclick="closeFullScreen()">
-    <img id="fullImg">
-</div>
-
-<script src="data.js" defer></script>
-<script src="script.js" defer></script>
-</body>
-</html>
+function loadPlanes(callback){
+    if(!db) return;
+    const tx = db.transaction(DB_STORE,'readonly');
+    const store = tx.objectStore(DB_STORE);
+    const req = store.getAll();
+    req.onsuccess = () => { planes = req.result; callback && callback(); };
+}

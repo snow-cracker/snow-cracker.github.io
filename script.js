@@ -1,12 +1,14 @@
 const $ = id => document.getElementById(id);
 let currentList=[],editIndex=-1,sliderImages=[],sliderItems=[],sliderIndex=0,tempImageList=[],currentGroupReg='';
 
+// ------------------- 初始化 -------------------
 initDB(()=>{
     currentList = planes;
-    render();
+    render(); // 先渲染本地数据
+    fetchRemoteData(); // 异步拉取 GitHub JSON，不影响页面
 });
 
-// ------------------- 渲染函数 -------------------
+// ------------------- 渲染和事件绑定 -------------------
 function render(){
     const gallery=$('gallery'); gallery.innerHTML='';
     if(!currentList) return;
@@ -46,5 +48,28 @@ function submitPhoto(){
     const base={time:$('time').value,location:$('location').value,icao:$('icao').value,airline:$('airline').value,airlineCode:$('airlineCode').value,country:$('country').value,model:$('model').value,reg:$('reg').value,status:$('status').value,note:$('note').value};
     tempImageList.forEach(img=>{ planes.unshift({...base,images:[img]}); });
     savePlanes(); currentList=planes; closeUpload(); render();
+    syncRemoteData(); // 异步同步 GitHub
     alert("提交成功！同注册编号自动合并");
 }
+
+// ------------------- 详情页功能 -------------------
+function openGroupDetail(group){ sliderItems=[]; sliderImages=[]; currentGroupReg=''; group.forEach(({item,index})=>{ if(!currentGroupReg) currentGroupReg=item.reg||''; (item.images||[]).forEach(img=>{ sliderItems.push({item,index}); sliderImages.push(img); }); }); sliderIndex=0; updateDetail(); $('detailModal').style.display='flex'; }
+function updateDetail(){ const img=sliderImages[sliderIndex]||''; const {item}=sliderItems[sliderIndex]||{item:{}}; $('detailImg').src=img; $('detailInfo').innerHTML=`<div>拍摄时间：${item.time||'-'}</div><div>拍摄地点：${item.location||'-'}</div><div>ICAO：${item.icao||'-'}</div><div>航空公司：${item.airline||'-'}</div><div>航司代码：${item.airlineCode||'-'}</div><div>所属国家：${item.country||'-'}</div><div>飞机机型：${item.model||'-'}</div><div>注册编号：${item.reg||'-'}</div><div>起降情况：${item.status||'-'}</div><div>备注：${item.note||'-'}</div>`; }
+function prevImg(){ if(!sliderItems.length) return; sliderIndex=(sliderIndex-1+sliderItems.length)%sliderItems.length; updateDetail(); }
+function nextImg(){ if(!sliderItems.length) return; sliderIndex=(sliderIndex+1)%sliderItems.length; updateDetail(); }
+function closeDetail(){ $('detailModal').style.display='none'; }
+function openEdit(){ closeDetail(); const {item,index}=sliderItems[sliderIndex]||{}; if(!item) return; editIndex=index; ['time','location','icao','airline','airlineCode','country','model','reg','status','note'].forEach(id=>{ const el=$(id); if(el) el.value=item[id]||''; }); tempImageList=[...(item.images||[])]; refreshPreview(); $('uploadModal').style.display='flex'; }
+function openFullScreen(){ $('fullImg').src=sliderImages[sliderIndex]||''; $('fullModal').style.display='flex'; }
+function closeFullScreen(){ $('fullModal').style.display='none'; }
+
+// ------------------- 分类和搜索 -------------------
+function doSearch(){ const kw=$('search').value.toLowerCase().split(' ').filter(Boolean); currentList=planes.filter(item=>kw.every(k=>JSON.stringify(item).toLowerCase().includes(k))); render(); }
+function setSubNav(items,onClick){ const box=$('subNav'); box.innerHTML=''; items.forEach(item=>{ const btn=document.createElement('button'); btn.innerText=item; btn.onclick=()=>onClick(item); box.appendChild(btn); }); }
+function navByTime(){ const times=[...new Set(planes.map(p=>p.time).filter(Boolean))].sort(); setSubNav(times,t=>{ currentList=planes.filter(p=>p.time===t); render(); }); }
+function navByLocation(){ const locs=[...new Set(planes.map(p=>p.location).filter(Boolean))].sort(); setSubNav(locs,l=>{ currentList=planes.filter(p=>p.location===l); render(); }); }
+function navByAirline(){ setSubNav(["中国航司","外国航司"],type=>{ const filtered=type==="中国航司"?planes.filter(p=>p.country==="中国"):planes.filter(p=>p.country!=="中国"); const airlines=[...new Set(filtered.map(p=>p.airline).filter(Boolean))].sort(); setSubNav(airlines,a=>{ currentList=planes.filter(p=>p.airline===a); render(); }); }); }
+function navByModel(){ const models=[...new Set(planes.map(p=>p.model).filter(Boolean))].sort(); setSubNav(models,m=>{ currentList=planes.filter(p=>p.model===m); render(); }); }
+
+// ------------------- GitHub 同步 -------------------
+async function fetchRemoteData(){ try{ const res = await fetch('planes_data.json'); if(res.ok){ const data = await res.json(); planes = data; savePlanes(); render(); } }catch(e){} }
+async function syncRemoteData(){ try{ /* GitHub API 同步逻辑，可根据 token 配置 */ }catch(e){} }

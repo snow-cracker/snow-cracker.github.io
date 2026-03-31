@@ -1,8 +1,6 @@
 // data.js
-// 初始化 planes 数据
 let planes = [];
 
-// IndexedDB 初始化（替代 localStorage）
 const DB_NAME = 'planeGalleryDB';
 const DB_STORE = 'planes';
 let db;

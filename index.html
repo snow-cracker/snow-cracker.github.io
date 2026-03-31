@@ -23,6 +23,7 @@
     </div>
 
     <div id="subNav" class="sub-nav"></div>
+
     <div id="gallery" class="masonry"></div>
 </div>
 
@@ -33,10 +34,12 @@
             <h2>上传航空摄影</h2>
             <button class="close-btn" onclick="closeUpload()">×</button>
         </div>
+
         <div class="preview-area">
             <div id="previewWrapper" class="preview-list"></div>
             <label class="add-btn">+<input type="file" id="imgFiles" multiple accept="image/*" hidden onchange="addImages()"></label>
         </div>
+
         <div class="form-body">
             <div class="form-row"><label>拍摄时间</label><input id="time"></div>
             <div class="form-row"><label>拍摄地点</label><input id="location"></div>
@@ -49,6 +52,7 @@
             <div class="form-row"><label>起降情况</label><input id="status"></div>
             <div class="form-row"><label>备注</label><textarea id="note" rows="3"></textarea></div>
         </div>
+
         <div class="upload-footer">
             <button class="cancel" onclick="closeUpload()">取消</button>
             <button class="submit" onclick="submitPhoto()">确认提交</button>

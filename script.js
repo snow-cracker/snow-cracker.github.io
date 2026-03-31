@@ -69,7 +69,13 @@ function nextImg(){ if(!sliderItems.length) return; sliderIndex=(sliderIndex+1)%
 
 function openUpload(){ editIndex=-1; clearForm(); $('uploadModal').style.display='flex'; }
 function closeUpload(){ $('uploadModal').style.display='none'; }
-function clearForm(){ ['time','location','icao','airline','airlineCode','country','model','reg','status','note'].forEach(id=>$(id).value=''); tempImageList=[]; refreshPreview(); }
+
+function clearForm(){
+    ['time','location','icao','airline','airlineCode','country','model','reg','status','note'].forEach(id=>{
+        const el=$(id); if(el) el.value='';
+    });
+    tempImageList=[]; refreshPreview();
+}
 
 function addImages(){
     const files=$('imgFiles').files; if(!files.length) return;
@@ -102,7 +108,9 @@ function submitPhoto(){
 
 function openEdit(){
     closeDetail(); const {item,index}=sliderItems[sliderIndex]||{}; if(!item) return; editIndex=index;
-    ['time','location','icao','airline','airlineCode','country','model','reg','status','note'].forEach(id=>$(id).value=item[id]||'');
+    ['time','location','icao','airline','airlineCode','country','model','reg','status','note'].forEach(id=>{
+        const el=$(id); if(el) el.value=item[id]||'';
+    });
     tempImageList=[...(item.images||[])]; refreshPreview(); $('uploadModal').style.display='flex';
 }
 

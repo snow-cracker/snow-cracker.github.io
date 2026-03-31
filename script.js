@@ -27,9 +27,9 @@ function render() {
         card.innerHTML = `
             <img src="${item.images[0]}">
             <div class="info">
-                <div>${item.airline || '-'}</div>
-                <div>${item.fullModel || '-'}</div>
-                <div>${item.reg || '-'}</div>
+                <div>航司：${item.airline || '-'}</div>
+                <div>机型：${item.fullModel || '-'}</div>
+                <div>注册号：${item.reg || '-'}</div>
             </div>
         `;
         card.onclick = () => openDetail(group);

@@ -5,7 +5,6 @@ let sliderImages = [];
 let sliderIndex = 0;
 let tempImageList = [];
 
-// 强制从本地存储读取，不被之前的错误覆盖
 if (localStorage.planeGallery) {
     try {
         planes = JSON.parse(localStorage.planeGallery);
@@ -19,24 +18,18 @@ render();
 function render() {
     const gallery = $("gallery");
     gallery.innerHTML = "";
-
-    if (!currentList || currentList.length === 0) {
-        return;
-    }
+    if (!currentList) return;
 
     currentList.forEach((item, idx) => {
         if (!item) return;
-
-        // 兼容老数据：没有 images 就给空数组
-        if (!item.images) item.images = [];
-
-        // 取第一张图，没有就用透明占位
-        const firstImg = item.images.length > 0 ? item.images[0] : "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+        let imgs = item.images || [];
+        if (typeof imgs === 'string') imgs = [imgs];
+        const first = imgs.length > 0 ? imgs[0] : '';
 
         const card = document.createElement("div");
         card.className = "card";
         card.innerHTML = `
-            <img src="${firstImg}" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='">
+            <img src="${first}" style="width:100%;display:block;">
             <div class="info">
                 <div>航司：${item.airline || '-'}</div>
                 <div>机型：${item.fullModel || '-'}</div>
@@ -79,7 +72,7 @@ function refreshPreview() {
     tempImageList.forEach((src, idx) => {
         const item = document.createElement("div");
         item.className = "preview-item";
-        item.innerHTML = `<img src="${src}"><button class="del-img" onclick="removeImage(${idx})">×</button>`;
+        item.innerHTML = `<img src="${src}" style="width:100%;height:100%;object-fit:cover;"><button class="del-img" onclick="removeImage(${idx})">×</button>`;
         wrap.appendChild(item);
     });
 }
@@ -113,6 +106,7 @@ function submitPhoto() {
 function openDetail(item, index) {
     if (!item) return;
     sliderImages = item.images || [];
+    if (typeof sliderImages === 'string') sliderImages = [sliderImages];
     sliderIndex = 0;
     editIndex = index;
     updateDetail();
@@ -120,13 +114,8 @@ function openDetail(item, index) {
 }
 
 function updateDetail() {
-    const imgElem = $("detailImg");
-    if (sliderImages.length > 0 && sliderIndex >= 0) {
-        imgElem.src = sliderImages[sliderIndex];
-    } else {
-        imgElem.src = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
-    }
-
+    const img = sliderImages[sliderIndex] || '';
+    $("detailImg").src = img;
     const p = planes[editIndex] || {};
     $("detailInfo").innerHTML = `
         <div>拍摄时间：${p.time || '-'}</div>
@@ -157,7 +146,7 @@ function nextImg() {
 }
 
 function openFullScreen() {
-    if (sliderImages.length > 0) {
+    if (sliderImages[sliderIndex]) {
         $("fullImg").src = sliderImages[sliderIndex];
         $("fullModal").style.display = "flex";
     }
@@ -204,7 +193,7 @@ function setSubNav(items, onClick) {
         const btn = document.createElement("button");
         btn.innerText = item;
         btn.onclick = () => onClick(item);
-        box.appendChild(btn);
+        box.appendChild(item);
     });
 }
 
@@ -218,7 +207,6 @@ function navByTime() {
         });
     });
 }
-
 function navByLocation() {
     const locs = [...new Set(planes.map(p => p.location).filter(Boolean))].sort();
     setSubNav(locs, l => {
@@ -229,7 +217,6 @@ function navByLocation() {
         });
     });
 }
-
 function navByAirline() {
     setSubNav(["中国航司", "外国航司"], type => {
         const filtered = type === "中国航司" ? planes.filter(p => p.country === "中国") : planes.filter(p => p.country !== "中国");
@@ -240,7 +227,6 @@ function navByAirline() {
         });
     });
 }
-
 function navByModel() {
     const models = [...new Set(planes.map(p => p.model).filter(Boolean))].sort();
     setSubNav(models, m => {

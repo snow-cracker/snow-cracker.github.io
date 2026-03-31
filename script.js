@@ -1,5 +1,5 @@
+// script.js
 const $ = id => document.getElementById(id);
-
 let currentList = planes;
 let editIndex = -1;
 let sliderImages = [];
@@ -8,7 +8,15 @@ let sliderIndex = 0;
 let tempImageList = [];
 let currentGroupReg = '';
 
-// 初始渲染
+if (localStorage.planeGallery) {
+    try {
+        planes = JSON.parse(localStorage.planeGallery);
+        currentList = planes;
+    } catch (e) {
+        planes = [];
+    }
+}
+
 render();
 
 function render() {
@@ -16,7 +24,6 @@ function render() {
     gallery.innerHTML = "";
     if (!currentList) return;
 
-    // 按注册号分组
     const groups = {};
     currentList.forEach((item, idx) => {
         if (!item) return;
@@ -27,7 +34,7 @@ function render() {
 
     Object.values(groups).forEach(group => {
         const first = group[0].item;
-        const firstImg = (first.images && first.images.length > 0) ? first.images[0] : '';
+        const firstImg = (first.images?.length > 0) ? first.images[0] : '';
 
         const card = document.createElement("div");
         card.className = "card";
@@ -43,7 +50,6 @@ function render() {
     });
 }
 
-// 删除组
 function deleteGroup(reg) {
     if (!confirm('确定删除该注册号所有记录？删除后无法恢复')) return;
     planes = planes.filter(p => (p.reg || '').trim() !== reg.trim());
@@ -53,7 +59,6 @@ function deleteGroup(reg) {
     render();
 }
 
-// 打开详情
 function openGroupDetail(group) {
     sliderItems = [];
     sliderImages = [];
@@ -90,29 +95,28 @@ function updateDetail() {
     `;
 }
 
-// 图片左右切换
 function prevImg() {
     if (sliderItems.length === 0) return;
     sliderIndex = (sliderIndex - 1 + sliderItems.length) % sliderItems.length;
     updateDetail();
 }
+
 function nextImg() {
     if (sliderItems.length === 0) return;
     sliderIndex = (sliderIndex + 1) % sliderItems.length;
     updateDetail();
 }
 
-// 上传弹窗
 function openUpload() {
     editIndex = -1;
     clearForm();
     $("uploadModal").style.display = "flex";
 }
+
 function closeUpload() {
     $("uploadModal").style.display = "none";
 }
 
-// 清空表单
 function clearForm() {
     $("time").value = "";
     $("location").value = "";
@@ -127,7 +131,6 @@ function clearForm() {
     refreshPreview();
 }
 
-// 添加图片
 function addImages() {
     const files = $("imgFiles").files;
     if (!files.length) return;
@@ -143,7 +146,6 @@ function addImages() {
     }
 }
 
-// 图片预览
 function refreshPreview() {
     const wrap = $("previewWrapper");
     wrap.innerHTML = "";
@@ -158,13 +160,11 @@ function refreshPreview() {
     });
 }
 
-// 删除预览图片
 function removeImage(index) {
     tempImageList.splice(index, 1);
     refreshPreview();
 }
 
-// 提交上传
 function submitPhoto() {
     if (tempImageList.length === 0) {
         alert("请选择图片");
@@ -195,7 +195,6 @@ function submitPhoto() {
     alert("提交成功！同注册号自动合并");
 }
 
-// 编辑信息
 function openEdit() {
     closeDetail();
     const { item, index } = sliderItems[sliderIndex] || {};
@@ -216,21 +215,19 @@ function openEdit() {
     $("uploadModal").style.display = "flex";
 }
 
-// 全屏查看
 function openFullScreen() {
     $("fullImg").src = sliderImages[sliderIndex] || '';
     $("fullModal").style.display = "flex";
 }
+
 function closeFullScreen() {
     $("fullModal").style.display = "none";
 }
 
-// 关闭详情
 function closeDetail() {
     $("detailModal").style.display = "none";
 }
 
-// 搜索
 function doSearch() {
     const kw = $("search").value.toLowerCase().split(' ').filter(Boolean);
     currentList = planes.filter(item =>
@@ -239,7 +236,6 @@ function doSearch() {
     render();
 }
 
-// 分页导航
 function setSubNav(items, onClick) {
     const box = $("subNav");
     box.innerHTML = "";
@@ -273,4 +269,17 @@ function navByAirline() {
             ? planes.filter(p => p.country === "中国")
             : planes.filter(p => p.country !== "中国");
         const airlines = [...new Set(filtered.map(p => p.airline).filter(Boolean))].sort();
-        set
+        setSubNav(airlines, a => {
+            currentList = planes.filter(p => p.airline === a);
+            render();
+        });
+    });
+}
+
+function navByModel() {
+    const models = [...new Set(planes.map(p => p.model).filter(Boolean))].sort();
+    setSubNav(models, m => {
+        currentList = planes.filter(p => p.model === m);
+        render();
+    });
+}

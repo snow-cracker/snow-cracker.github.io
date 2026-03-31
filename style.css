@@ -120,8 +120,10 @@ h1 {
     height: 100%;
     background: rgba(0,0,0,0.85);
     z-index: 9999;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
 }
 
 /* 上传弹窗 */
@@ -130,8 +132,8 @@ h1 {
     width: 90%;
     max-width: 720px;
     border-radius: 20px;
-    max-height: 90vh;
-    overflow-y: auto;
+    margin: 0 auto;
+    overflow: hidden;
 }
 .upload-header {
     display: flex;
@@ -243,13 +245,14 @@ h1 {
     cursor: pointer;
 }
 
-/* 详情弹窗（中央大磁贴） */
+/* 详情弹窗 */
 .detail-card {
     background: #1c1c1c;
     width: 90%;
     max-width: 900px;
     border-radius: 20px;
     overflow: hidden;
+    margin: 0 auto;
 }
 .detail-header {
     display: flex;

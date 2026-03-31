@@ -14,14 +14,7 @@ render();
 function render() {
     const gallery = $("gallery");
     gallery.innerHTML = "";
-    const groups = {};
-    currentList.forEach(p => {
-        const key = p.reg || p.airline + p.fullModel + p.time;
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(p);
-    });
-    Object.values(groups).forEach(group => {
-        const item = group[0];
+    currentList.forEach((item, idx) => {
         const card = document.createElement("div");
         card.className = "card";
         card.innerHTML = `
@@ -32,7 +25,7 @@ function render() {
                 <div>注册号：${item.reg || '-'}</div>
             </div>
         `;
-        card.onclick = () => openDetail(group);
+        card.onclick = () => openDetail(item, idx);
         gallery.appendChild(card);
     });
 }
@@ -96,13 +89,11 @@ function submitPhoto() {
     alert("提交成功");
 }
 
-function openDetail(group) {
-    sliderImages = [];
-    group.forEach(g => sliderImages.push(...g.images));
+// 🔥 修复：多图左右切换
+function openDetail(item, index) {
+    sliderImages = item.images || [];
     sliderIndex = 0;
-    const target = group[0];
-    editIndex = planes.findIndex(p => p.reg === target.reg);
-    if (editIndex < 0) editIndex = 0;
+    editIndex = index;
     updateDetail();
     $("detailModal").style.display = "flex";
 }

@@ -20,9 +20,7 @@ function savePlanes(){
     if(!db) return;
     const tx = db.transaction(DB_STORE,'readwrite');
     const store = tx.objectStore(DB_STORE);
-    store.clear().onsuccess = () => {
-        planes.forEach(p=>store.add(p));
-    }
+    store.clear().onsuccess = () => { planes.forEach(p=>store.add(p)); };
 }
 
 function loadPlanes(callback){

@@ -2,14 +2,14 @@ const $ = id => document.getElementById(id);
 
 let currentList = [], editIndex = -1, sliderImages = [], sliderItems = [], sliderIndex = 0, tempImageList = [], currentGroupReg = '';
 
-// ---------------- IndexedDB 初始化 ----------------
+// 初始化 IndexedDB
 initDB(() => {
     currentList = planes;
-    render(); // 先渲染本地数据
-    fetchRemoteData(); // 异步拉取远程 JSON，不阻断页面
+    render();
+    fetchRemoteData();
 });
 
-// ---------------- 渲染函数 ----------------
+// ---------------- 渲染 ----------------
 function render() {
     const gallery = $('gallery');
     gallery.innerHTML = '';
@@ -53,7 +53,7 @@ function addImages() {
     const files = $('imgFiles').files;
     if (!files.length) return;
     let loaded = 0;
-    for (let i=0;i<files.length;i++) {
+    for (let i = 0; i < files.length; i++) {
         const reader = new FileReader();
         reader.onload = e => { tempImageList.push(e.target.result); loaded++; if(loaded===files.length) refreshPreview(); };
         reader.readAsDataURL(files[i]);
@@ -75,13 +75,24 @@ function removeImage(idx) { tempImageList.splice(idx,1); refreshPreview(); }
 
 function submitPhoto() {
     if (!tempImageList.length) { alert("请选择图片"); return; }
-    const base = {time:$('time').value,location:$('location').value,icao:$('icao').value,airline:$('airline').value,airlineCode:$('airlineCode').value,country:$('country').value,model:$('model').value,reg:$('reg').value,status:$('status').value,note:$('note').value};
+    const base = {
+        time:$('time').value,
+        location:$('location').value,
+        icao:$('icao').value,
+        airline:$('airline').value,
+        airlineCode:$('airlineCode').value,
+        country:$('country').value,
+        model:$('model').value,
+        reg:$('reg').value,
+        status:$('status').value,
+        note:$('note').value
+    };
     tempImageList.forEach(img => { planes.unshift({...base, images:[img]}); });
     savePlanes();
     currentList = planes;
     closeUpload();
     render();
-    syncRemoteData(); // 异步同步远程 JSON
+    syncRemoteData();
     alert("提交成功！同注册编号自动合并");
 }
 
@@ -99,6 +110,12 @@ function updateDetail() {
     const img = sliderImages[sliderIndex] || '';
     const {item} = sliderItems[sliderIndex] || {item:{}};
     $('detailImg').src = img;
+
+    // 设置背景模糊
+    const bg = $('detailModal').querySelector('.detail-image-section');
+    bg.style.backgroundImage = `url(${img})`;
+    bg.style.filter = 'blur(15px)';
+
     $('detailInfo').innerHTML = `
         <div>拍摄时间：${item.time||'-'}</div>
         <div>拍摄地点：${item.location||'-'}</div>
@@ -114,12 +131,15 @@ function updateDetail() {
 
 function prevImg() { if(!sliderItems.length) return; sliderIndex=(sliderIndex-1+sliderItems.length)%sliderItems.length; updateDetail(); }
 function nextImg() { if(!sliderItems.length) return; sliderIndex=(sliderIndex+1)%sliderItems.length; updateDetail(); }
-function closeDetail() { $('detailModal').style.display='none'; }
+function closeDetail(){ $('detailModal').style.display='none'; }
 function openEdit() { 
-    closeDetail(); const {item,index} = sliderItems[sliderIndex]||{}; 
-    if(!item) return; editIndex=index;
-    ['time','location','icao','airline','airlineCode','country','model','reg','status','note'].forEach(id => { const el = $(id); if(el) el.value = item[id]||''; });
-    tempImageList = [...(item.images||[])]; refreshPreview();
+    closeDetail();
+    const {item,index} = sliderItems[sliderIndex]||{};
+    if(!item) return;
+    editIndex=index;
+    ['time','location','icao','airline','airlineCode','country','model','reg','status','note'].forEach(id => { const el=$(id); if(el) el.value=item[id]||''; });
+    tempImageList = [...(item.images||[])];
+    refreshPreview();
     $('uploadModal').style.display='flex';
 }
 function openFullScreen(){ $('fullImg').src = sliderImages[sliderIndex]||''; $('fullModal').style.display='flex'; }
@@ -152,7 +172,7 @@ function setSubNav(items, onClick) {
 
 // ---------------- 分类 ----------------
 function navByTime(){ const times=[...new Set(planes.map(p=>p.time).filter(Boolean))].sort(); setSubNav(times, t=>{ currentList = planes.filter(p=>p.time===t); render(); }); }
-function navByLocation(){ const locs=[...new Set(planes.map(p=>p.location).filter(Boolean))].sort(); setSubNav(locs,l=>{ currentList=planes.filter(p=>p.location===l); render(); }); } 
+function navByLocation(){ const locs=[...new Set(planes.map(p=>p.location).filter(Boolean))].sort(); setSubNav(locs,l=>{ currentList = planes.filter(p=>p.location===l); render(); }); } 
 function navByAirline(){ setSubNav(["中国航司","外国航司"], type=>{ const filtered = type==="中国航司"?planes.filter(p=>p.country==="中国"):planes.filter(p=>p.country!=="中国"); const airlines = [...new Set(filtered.map(p=>p.airline).filter(Boolean))].sort(); setSubNav(airlines, a=>{ currentList = planes.filter(p=>p.airline===a); render(); }); }); }
 function navByModel(){ const models=[...new Set(planes.map(p=>p.model).filter(Boolean))].sort(); setSubNav(models,m=>{ currentList = planes.filter(p=>p.model===m); render(); }); }
 

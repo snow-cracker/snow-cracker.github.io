@@ -41,8 +41,9 @@ function render() {
         card.innerHTML = `
             <img src="${firstImg}" style="width:100%;display:block;">
             <div class="info">
-                <div>航司：${first.airline || '-'}</div>
-                <div>注册号：${first.reg || '-'}</div>
+                <div>航空公司：${first.airline || '-'}</div>
+                <div>飞机机型：${first.model || '-'}</div>
+                <div>注册编号：${first.reg || '-'}</div>
             </div>
         `;
         card.onclick = () => openGroupDetail(group);
@@ -88,9 +89,10 @@ function updateDetail() {
         <div>ICAO：${item.icao || '-'}</div>
         <div>航空公司：${item.airline || '-'}</div>
         <div>航司代码：${item.airlineCode || '-'}</div>
-        <div>国家：${item.country || '-'}</div>
-        <div>注册号：${item.reg || '-'}</div>
-        <div>起降：${item.status || '-'}</div>
+        <div>所属国家：${item.country || '-'}</div>
+        <div>飞机机型：${item.model || '-'}</div>
+        <div>注册编号：${item.reg || '-'}</div>
+        <div>起降情况：${item.status || '-'}</div>
         <div>备注：${item.note || '-'}</div>
     `;
 }
@@ -118,7 +120,7 @@ function closeUpload() {
 }
 
 function clearForm() {
-    ["time","location","icao","airline","airlineCode","country","reg","status","note"].forEach(id => $(id).value="");
+    ["time","location","icao","airline","airlineCode","country","model","reg","status","note"].forEach(id => $(id).value="");
     tempImageList = [];
     refreshPreview();
 }
@@ -156,7 +158,18 @@ function removeImage(idx) {
 
 function submitPhoto() {
     if (!tempImageList.length) { alert("请选择图片"); return; }
-    const base = {time:$("time").value,location:$("location").value,icao:$("icao").value,airline:$("airline").value,airlineCode:$("airlineCode").value,country:$("country").value,reg:$("reg").value,status:$("status").value,note:$("note").value};
+    const base = {
+        time:$("time").value,
+        location:$("location").value,
+        icao:$("icao").value,
+        airline:$("airline").value,
+        airlineCode:$("airlineCode").value,
+        country:$("country").value,
+        model:$("model").value,
+        reg:$("reg").value,
+        status:$("status").value,
+        note:$("note").value
+    };
     tempImageList.forEach(img=>{
         planes.unshift({...base,images:[img]});
     });
@@ -164,7 +177,7 @@ function submitPhoto() {
     currentList = planes;
     closeUpload();
     render();
-    alert("提交成功！同注册号自动合并");
+    alert("提交成功！同注册编号自动合并");
 }
 
 function openEdit() {
@@ -172,7 +185,7 @@ function openEdit() {
     const { item,index } = sliderItems[sliderIndex] || {};
     if(!item) return;
     editIndex=index;
-    ["time","location","icao","airline","airlineCode","country","reg","status","note"].forEach(id=>$(id).value=item[id]||"");
+    ["time","location","icao","airline","airlineCode","country","model","reg","status","note"].forEach(id=>$(id).value=item[id]||"");
     tempImageList=[...(item.images||[])];
     refreshPreview();
     $("uploadModal").style.display="flex";

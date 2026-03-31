@@ -5,7 +5,7 @@ let sliderImages = [];
 let sliderIndex = 0;
 let tempImageList = [];
 
-// 安全读取本地数据
+// 读取本地永久数据
 if (localStorage.planeGallery) {
     try {
         planes = JSON.parse(localStorage.planeGallery);
@@ -60,14 +60,22 @@ function clearForm() {
     refreshPreview();
 }
 
-// 🔥 核心修复：永久保存图片（base64）
+// ==========================================
+// 🔥 永久保存图片核心（唯一不丢图的方法）
+// ==========================================
 function addImages() {
     const files = $("imgFiles").files;
+    let total = files.length;
+    let loaded = 0;
+
     for (let i = 0; i < files.length; i++) {
         const reader = new FileReader();
         reader.onload = (e) => {
             tempImageList.push(e.target.result);
-            refreshPreview();
+            loaded++;
+            if (loaded === total) {
+                refreshPreview();
+            }
         };
         reader.readAsDataURL(files[i]);
     }
@@ -96,17 +104,32 @@ function removeImage(index) {
 
 // 提交（永久保存）
 function submitPhoto() {
-    if (tempImageList.length === 0) return alert("请选择图片");
+    if (tempImageList.length === 0) {
+        alert("请选择图片");
+        return;
+    }
+
     const data = {
-        time: $("time").value, location: $("location").value, icao: $("icao").value,
-        airline: $("airline").value, airlineCode: $("airlineCode").value, country: $("country").value,
-        model: $("model").value, fullModel: $("fullModel").value, age: $("age").value,
-        reg: $("reg").value, status: $("status").value, note: $("note").value,
+        time: $("time").value,
+        location: $("location").value,
+        icao: $("icao").value,
+        airline: $("airline").value,
+        airlineCode: $("airlineCode").value,
+        country: $("country").value,
+        model: $("model").value,
+        fullModel: $("fullModel").value,
+        age: $("age").value,
+        reg: $("reg").value,
+        status: $("status").value,
+        note: $("note").value,
         images: [...tempImageList]
     };
 
-    if (editIndex >= 0) planes[editIndex] = data;
-    else planes.unshift(data);
+    if (editIndex >= 0) {
+        planes[editIndex] = data;
+    } else {
+        planes.unshift(data);
+    }
 
     localStorage.planeGallery = JSON.stringify(planes);
     currentList = planes;
@@ -143,7 +166,7 @@ function updateDetail() {
     `;
 }
 
-// 左右切换图片
+// 左右切换
 function prevImg() {
     sliderIndex = (sliderIndex - 1 + sliderImages.length) % sliderImages.length;
     updateDetail();
@@ -153,7 +176,7 @@ function nextImg() {
     updateDetail();
 }
 
-// 全屏预览
+// 全屏
 function openFullScreen() {
     $("fullImg").src = sliderImages[sliderIndex];
     $("fullModal").style.display = "flex";
@@ -192,7 +215,7 @@ function doSearch() {
     render();
 }
 
-// 子导航
+// 导航
 function setSubNav(items, onClick) {
     const box = $("subNav");
     box.innerHTML = "";

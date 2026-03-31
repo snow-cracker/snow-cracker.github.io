@@ -5,21 +5,38 @@ let sliderImages = [];
 let sliderIndex = 0;
 let tempImageList = [];
 
+// 强制从本地存储读取，不被之前的错误覆盖
 if (localStorage.planeGallery) {
-    planes = JSON.parse(localStorage.planeGallery);
-    currentList = planes;
+    try {
+        planes = JSON.parse(localStorage.planeGallery);
+        currentList = planes;
+    } catch (e) {
+        planes = [];
+    }
 }
 render();
 
 function render() {
     const gallery = $("gallery");
     gallery.innerHTML = "";
+
+    if (!currentList || currentList.length === 0) {
+        return;
+    }
+
     currentList.forEach((item, idx) => {
-        if (!item.images || item.images.length === 0) return;
+        if (!item) return;
+
+        // 兼容老数据：没有 images 就给空数组
+        if (!item.images) item.images = [];
+
+        // 取第一张图，没有就用透明占位
+        const firstImg = item.images.length > 0 ? item.images[0] : "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+
         const card = document.createElement("div");
         card.className = "card";
         card.innerHTML = `
-            <img src="${item.images[0]}">
+            <img src="${firstImg}" onerror="this.src='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=='">
             <div class="info">
                 <div>航司：${item.airline || '-'}</div>
                 <div>机型：${item.fullModel || '-'}</div>
@@ -81,8 +98,11 @@ function submitPhoto() {
         reg: $("reg").value, status: $("status").value, note: $("note").value,
         images: [...tempImageList]
     };
-    if (editIndex >= 0) planes[editIndex] = data;
-    else planes.unshift(data);
+    if (editIndex >= 0) {
+        planes[editIndex] = data;
+    } else {
+        planes.unshift(data);
+    }
     localStorage.planeGallery = JSON.stringify(planes);
     currentList = planes;
     closeUpload();
@@ -91,7 +111,8 @@ function submitPhoto() {
 }
 
 function openDetail(item, index) {
-    sliderImages = item.images;
+    if (!item) return;
+    sliderImages = item.images || [];
     sliderIndex = 0;
     editIndex = index;
     updateDetail();
@@ -99,7 +120,13 @@ function openDetail(item, index) {
 }
 
 function updateDetail() {
-    $("detailImg").src = sliderImages[sliderIndex];
+    const imgElem = $("detailImg");
+    if (sliderImages.length > 0 && sliderIndex >= 0) {
+        imgElem.src = sliderImages[sliderIndex];
+    } else {
+        imgElem.src = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+    }
+
     const p = planes[editIndex] || {};
     $("detailInfo").innerHTML = `
         <div>拍摄时间：${p.time || '-'}</div>
@@ -118,18 +145,22 @@ function updateDetail() {
 }
 
 function prevImg() {
+    if (!sliderImages || sliderImages.length === 0) return;
     sliderIndex = (sliderIndex - 1 + sliderImages.length) % sliderImages.length;
     updateDetail();
 }
 
 function nextImg() {
+    if (!sliderImages || sliderImages.length === 0) return;
     sliderIndex = (sliderIndex + 1) % sliderImages.length;
     updateDetail();
 }
 
 function openFullScreen() {
-    $("fullImg").src = sliderImages[sliderIndex];
-    $("fullModal").style.display = "flex";
+    if (sliderImages.length > 0) {
+        $("fullImg").src = sliderImages[sliderIndex];
+        $("fullModal").style.display = "flex";
+    }
 }
 
 function closeFullScreen() {
